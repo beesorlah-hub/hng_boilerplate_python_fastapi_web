@@ -12,6 +12,7 @@ from api.v1.schemas.newsletter import EMAILSCHEMA
 from api.db.database import get_db, Base, engine
 
 
+
 class CustomException(HTTPException):
     """
     Custom error handling
@@ -61,4 +62,27 @@ async def sub_newsletter(request: EMAILSCHEMA, db: Session = Depends(get_db)):
         "message": "Thank you for subscribing to our newsletter.",
         "success": True,
         "status": status.HTTP_201_CREATED
+    }
+
+
+@newsletter.get('pages/newsletter/subscribers')
+async def get_subscribers(db: Session = Depends(get_db)):
+    """
+    Get all newsletter subscribers
+    """
+    subscribers = db.query(Newsletter).all()
+    if not subscribers:
+        raise CustomException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "message": "No subscribers found",
+                "success": False,
+                "status_code": 404
+            }
+        )
+    return{
+        "message": "Subscribers retrived successfully",
+        "success": True,
+        "status_code": status.HTTP_200_OK,
+        "data": [subscriber.email for subscriber in subscribers]
     }
